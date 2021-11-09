@@ -2,75 +2,26 @@ local closestStation = 0
 local currentStation = 0
 local currentFires = {}
 local currentGate = 0
-
-Citizen.CreateThread(function()
-    while true do
-        local ped = PlayerPedId()
-        local pos = GetEntityCoords(ped)
-        local dist
-
-        if QBCore ~= nil then
-            local inRange = false
-            for k, v in pairs(Config.PowerStations) do
-                dist = #(pos - Config.PowerStations[k].coords)
-                if dist < 5 then
-                    closestStation = k
-                    inRange = true
-                end
-            end
-
-            if not inRange then
-                Citizen.Wait(1000)
-                closestStation = 0
-            end
-        end
-        Citizen.Wait(3)
-    end
-end)
 local requiredItemsShowed = false
 local requiredItems = {}
-Citizen.CreateThread(function()
-    Citizen.Wait(2000)
-    requiredItems = {
-        [1] = {name = QBCore.Shared.Items["thermite"]["name"], image = QBCore.Shared.Items["thermite"]["image"]},
-    }
-    while true do
-        local ped = PlayerPedId()
-        local pos = GetEntityCoords(ped)
 
-        if QBCore ~= nil then
-            if closestStation ~= 0 then
-                if not Config.PowerStations[closestStation].hit then
-                    DrawMarker(2, Config.PowerStations[closestStation].coords.x, Config.PowerStations[closestStation].coords.y, Config.PowerStations[closestStation].coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.25, 0.1, 255, 255, 255, 155, 0, 0, 0, 1, 0, 0, 0)
-                    local dist = #(pos - Config.PowerStations[closestStation].coords)
-                    if dist < 1 then
-                        if not requiredItemsShowed then
-                            requiredItemsShowed = true
-                            TriggerEvent('inventory:client:requiredItems', requiredItems, true)
-                        end
-                    else
-                        if requiredItemsShowed then
-                            requiredItemsShowed = false
-                            TriggerEvent('inventory:client:requiredItems', requiredItems, false)
-                        end
-                    end
-                end
-            else
-                Citizen.Wait(1500)
-            end
-        end
+-- Functions
 
-        Citizen.Wait(1)
+local function CreateFire(coords, time)
+    for i = 1, math.random(1, 7), 1 do
+        TriggerServerEvent("thermite:StartServerFire", coords, 24, false)
     end
-end)
+    Wait(time)
+    TriggerServerEvent("thermite:StopFires")
+end
 
-RegisterNetEvent('police:SetCopCount')
-AddEventHandler('police:SetCopCount', function(amount)
+-- Events
+
+RegisterNetEvent('police:SetCopCount', function(amount)
     CurrentCops = amount
 end)
 
-RegisterNetEvent("thermite:StartFire")
-AddEventHandler("thermite:StartFire", function(coords, maxChildren, isGasFire)
+RegisterNetEvent('thermite:StartFire', function(coords, maxChildren, isGasFire)
     if #(vector3(coords.x, coords.y, coords.z) - GetEntityCoords(PlayerPedId())) < 100 then
         local pos = {
             x = coords.x,
@@ -83,15 +34,13 @@ AddEventHandler("thermite:StartFire", function(coords, maxChildren, isGasFire)
     end
 end)
 
-RegisterNetEvent("thermite:StopFires")
-AddEventHandler("thermite:StopFires", function()
+RegisterNetEvent('thermite:StopFires', function()
     for k, v in ipairs(currentFires) do
         RemoveScriptFire(v)
     end
 end)
 
-RegisterNetEvent('thermite:UseThermite')
-AddEventHandler('thermite:UseThermite', function()
+RegisterNetEvent('thermite:UseThermite', function()
     local ped = PlayerPedId()
     local pos = GetEntityCoords(ped)
     if closestStation ~= 0 then
@@ -138,10 +87,11 @@ AddEventHandler('thermite:UseThermite', function()
     end
 end)
 
-RegisterNetEvent('qb-bankrobbery:client:SetStationStatus')
-AddEventHandler('qb-bankrobbery:client:SetStationStatus', function(key, isHit)
+RegisterNetEvent('qb-bankrobbery:client:SetStationStatus', function(key, isHit)
     Config.PowerStations[key].hit = isHit
 end)
+
+-- NUI Callbacks
 
 RegisterNUICallback('thermiteclick', function()
     PlaySound(-1, "CLICK_BACK", "WEB_NAVIGATION_SOUNDS_PHONE", 0, 0, 1)
@@ -154,7 +104,6 @@ RegisterNUICallback('thermitefailed', function()
             ClearPedTasks(PlayerPedId())
             local coords = GetEntityCoords(PlayerPedId())
             local randTime = math.random(10000, 15000)
-
             CreateFire(coords, randTime)
         end
     end)
@@ -168,7 +117,7 @@ RegisterNUICallback('thermitesuccess', function()
             local coords = GetEntityCoords(PlayerPedId())
             while time > 0 do
                 QBCore.Functions.Notify("Thermite is going off in " .. time .. "..")
-                Citizen.Wait(1000)
+                Wait(1000)
                 time = time - 1
             end
             local randTime = math.random(10000, 15000)
@@ -189,10 +138,81 @@ RegisterNUICallback('closethermite', function()
     SetNuiFocus(false, false)
 end)
 
-function CreateFire(coords, time)
-    for i = 1, math.random(1, 7), 1 do
-        TriggerServerEvent("thermite:StartServerFire", coords, 24, false)
+-- Threads
+
+CreateThread(function()
+    while true do
+        local ped = PlayerPedId()
+        local pos = GetEntityCoords(ped)
+        local dist
+        if QBCore ~= nil then
+            local inRange = false
+            for k, v in pairs(Config.PowerStations) do
+                dist = #(pos - Config.PowerStations[k].coords)
+                if dist < 5 then
+                    closestStation = k
+                    inRange = true
+                end
+            end
+            if not inRange then
+                Wait(1000)
+                closestStation = 0
+            end
+        end
+        Wait(3)
     end
-    Citizen.Wait(time)
-    TriggerServerEvent("thermite:StopFires")
-end
+end)
+
+CreateThread(function()
+    while true do
+        local ped = PlayerPedId()
+        local pos = GetEntityCoords(ped)
+        local dist
+        if QBCore ~= nil then
+            local inRange = false
+            for k, v in pairs(Config.PowerStations) do
+                dist = #(pos - Config.PowerStations[k].coords)
+                if dist < 5 then
+                    closestStation = k
+                    inRange = true
+                end
+            end
+            if not inRange then
+                Wait(1000)
+                closestStation = 0
+            end
+        end
+        Wait(3)
+    end
+end)
+
+CreateThread(function()
+    Wait(2000)
+    requiredItems = {[1] = {name = QBCore.Shared.Items["thermite"]["name"], image = QBCore.Shared.Items["thermite"]["image"]}}
+    while true do
+        local ped = PlayerPedId()
+        local pos = GetEntityCoords(ped)
+        if QBCore ~= nil then
+            if closestStation ~= 0 then
+                if not Config.PowerStations[closestStation].hit then
+                    DrawMarker(2, Config.PowerStations[closestStation].coords.x, Config.PowerStations[closestStation].coords.y, Config.PowerStations[closestStation].coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.25, 0.1, 255, 255, 255, 155, 0, 0, 0, 1, 0, 0, 0)
+                    local dist = #(pos - Config.PowerStations[closestStation].coords)
+                    if dist < 1 then
+                        if not requiredItemsShowed then
+                            requiredItemsShowed = true
+                            TriggerEvent('inventory:client:requiredItems', requiredItems, true)
+                        end
+                    else
+                        if requiredItemsShowed then
+                            requiredItemsShowed = false
+                            TriggerEvent('inventory:client:requiredItems', requiredItems, false)
+                        end
+                    end
+                end
+            else
+                Wait(1500)
+            end
+        end
+        Wait(1)
+    end
+end)
