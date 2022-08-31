@@ -320,7 +320,6 @@ RegisterNetEvent('qb-bankrobbery:server:callCops', function(type, bank, streetLa
     }
     TriggerClientEvent("qb-bankrobbery:client:robberyCall", -1, type, bank, streetLabel, coords)
     TriggerClientEvent("qb-phone:client:addPoliceAlert", -1, alertData)
-    TriggerServerEvent('police:server:policeAlert', 'Robbery In Progress')
 end)
 
 RegisterNetEvent('qb-bankrobbery:server:SetStationStatus', function(key, isHit)

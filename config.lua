@@ -2,12 +2,12 @@ Config = Config or {}
 
 Config.ItemTiers = 1
 
-Config.MinimumPaletoPolice = 4
-Config.MinimumPacificPolice = 5
-Config.MinimumFleecaPolice = 3
-Config.MinimumThermitePolice = 2
+Config.MinimumPaletoPolice = 0
+Config.MinimumPacificPolice = 0
+Config.MinimumFleecaPolice = 0
+Config.MinimumThermitePolice = 0
 
-Config.HitsNeeded = 5 -- The amount of powerstation needed to be hit to cause a blackout
+Config.HitsNeeded = 2 -- The amount of powerstation needed to be hit to cause a blackout
 
 Config.RewardTypes = {
     [1] = {
@@ -15,7 +15,7 @@ Config.RewardTypes = {
     },
     [2] = {
         type = "money",
-        maxAmount = 500
+        maxAmount = 1500
     }
 }
 
@@ -503,76 +503,81 @@ Config.BigBanks = {
         ["label"] = "Pacific Standard",
         ["coords"] = {
             [1] = vector3(261.95, 223.11, 106.28),
-            [2] = vector3(253.25, 228.44, 101.68)
+            [2] = vector3(236.25, 229.38, 97.12)
         },
         ["alarm"] = true,
         ["object"] = 961976194,
         ["heading"] = {
-            closed = 160.00001,
-            open = 70.00001
+            closed = 70.00,
+            open = 303.00
         },
         ["thermite"] = {
             [1] = {
-                ["coords"] = vector3(252.55, 221.15, 101.68),
+                ["coords"] = vector3(270.103210, 212.922928, 97.317978),
                 ["isOpened"] = false,
                 ["doorId"] = 2
             },
             [2] = {
-                ["coords"] = vector3(261.15, 215.21, 101.68),
+                ["coords"] = vector3(250.564209, 233.399384, 97.317978),
                 ["isOpened"] = false,
                 ["doorId"] = 3
+            },
+            [3] = {
+                ["coords"] = vector3(244.558014, 216.897278, 97.317978),
+                ["isOpened"] = false,
+                ["doorId"] = 4
             }
         },
         ["camId"] = 26,
         ["isOpened"] = false,
         ["lockers"] = {
             [1] = {
-                ["coords"] = vector3(258.57, 218.36, 101.68),
+                ["coords"] = vector3(240.67, 213.9, 97.12),
                 ["isBusy"] = false,
                 ["isOpened"] = false
             },
             [2] = {
-                ["coords"] = vector3(260.82, 217.62, 101.68),
+                ["coords"] = vector3(241.51, 210.18, 97.12),
                 ["isBusy"] = false,
                 ["isOpened"] = false
             },
             [3] = {
-                ["coords"] = vector3(259.33, 213.76, 101.68),
+                ["coords"] = vector3(244.56, 212.79, 97.12),             
                 ["isBusy"] = false,
                 ["isOpened"] = false
             },
             [4] = {
-                ["coords"] = vector3(257.09, 214.55, 101.68),
+                ["coords"] = vector3(253.25, 236.63, 97.12),
                 ["isBusy"] = false,
                 ["isOpened"] = false
             },
             [5] = {
-                ["coords"] = vector3(263.7, 216.48, 101.68),
+                ["coords"] = vector3(252.44, 240.56, 97.12),
                 ["isBusy"] = false,
                 ["isOpened"] = false
             },
             [6] = {
-                ["coords"] = vector3(265.81, 215.81, 101.68),
+                ["coords"] = vector3(249.36, 237.81, 97.12),         
                 ["isBusy"] = false,
                 ["isOpened"] = false
             },
             [7] = {
-                ["coords"] = vector3(266.43, 214.37, 101.68),
+                ["coords"] = vector3(231.8, 233.48, 97.12),
                 ["isBusy"] = false,
                 ["isOpened"] = false
             },
             [8] = {
-                ["coords"] = vector3(265.71, 212.49, 101.68),
+                ["coords"] = vector3(230.04, 234.74, 97.12),
                 ["isBusy"] = false,
                 ["isOpened"] = false
             },
             [9] = {
-                ["coords"] = vector3(264.24, 211.92, 101.68),
+                ["coords"] = vector3(228.06, 225.94, 97.12),
                 ["isBusy"] = false,
                 ["isOpened"] = false
             },
             [10] = {
-                ["coords"] = vector3(262.21, 212.67, 101.68),
+                ["coords"] = vector3(225.27, 227.02, 97.12),
                 ["isBusy"] = false,
                 ["isOpened"] = false
             }

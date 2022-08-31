@@ -119,6 +119,24 @@ RegisterNetEvent('qb-bankrobbery:UseBankcardA', function()
                                 if Config.BigBanks["paleto"]["alarm"] then
                                     TriggerServerEvent("qb-bankrobbery:server:callCops", "paleto", 0, streetLabel, pos)
                                     copsCalled = true
+                                    local data = exports['cd_dispatch']:GetPlayerInfo()
+                                    TriggerServerEvent('cd_dispatch:AddNotification', {
+                                        job_table = {'police'}, 
+                                        coords = data.coords,
+                                        title = '10-45 - Bank Robbery',
+                                        message = 'A '..data.sex..' robbing a Bank at '..data.street, 
+                                        flash = 0,
+                                        unique_id = tostring(math.random(0000000,9999999)),
+                                        blip = {
+                                            sprite = 431, 
+                                            scale = 1.2, 
+                                            colour = 3,
+                                            flashes = false, 
+                                            text = '911 - Bank Robbery',
+                                            time = (5*60*1000),
+                                            sound = 1,
+                                        }
+                                    })
                                 end
                             end
                         end, function() -- Cancel
