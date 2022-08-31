@@ -340,7 +340,7 @@ RegisterNetEvent('electronickit:UseElectronickit', function()
                                                     TriggerServerEvent('cd_dispatch:AddNotification', {
                                                         job_table = {'police'}, 
                                                         coords = data.coords,
-                                                        title = '10-45 - Bank Robbery',
+                                                        title = '10-90 - Bank Robbery',
                                                         message = 'A '..data.sex..' robbing a bank at '..data.street, 
                                                         flash = 0,
                                                         unique_id = tostring(math.random(0000000,9999999)),
