@@ -407,7 +407,7 @@ end)
 
 CreateThread(function()
     while true do
-        Wait(1000 * 60 * 10)
+        Wait(1000 * 60 * 30)
         if blackoutActive then
             TriggerEvent("qb-weathersync:server:toggleBlackout")
             TriggerClientEvent("police:client:EnableAllCameras", -1)

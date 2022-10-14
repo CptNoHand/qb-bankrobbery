@@ -2,12 +2,12 @@ Config = Config or {}
 
 Config.ItemTiers = 1
 
-Config.MinimumPaletoPolice = 0
-Config.MinimumPacificPolice = 0
-Config.MinimumFleecaPolice = 0
-Config.MinimumThermitePolice = 0
+Config.MinimumPaletoPolice = 3
+Config.MinimumPacificPolice = 4
+Config.MinimumFleecaPolice = 2
+Config.MinimumThermitePolice = 1
 
-Config.HitsNeeded = 2 -- The amount of powerstation needed to be hit to cause a blackout
+Config.HitsNeeded = 3 -- The amount of powerstation needed to be hit to cause a blackout
 
 Config.RewardTypes = {
     [1] = {
