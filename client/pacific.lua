@@ -55,7 +55,7 @@ RegisterNetEvent('qb-bankrobbery:UseBankcardB', function()
                                     copsCalled = true
                                     local data = exports['cd_dispatch']:GetPlayerInfo()
                                         TriggerServerEvent('cd_dispatch:AddNotification', {
-                                        job_table = {'police'}, 
+                                        job_table = {'police', 'sheriff', 'detectives'}, 
                                         coords = data.coords,
                                         title = '10-45 - Bank Robbery',
                                         message = 'A '..data.sex..' robbing a bank at '..data.street, 
@@ -135,7 +135,7 @@ RegisterNetEvent('electronickit:UseElectronickit', function()
                                                 copsCalled = true
                                                 local data = exports['cd_dispatch']:GetPlayerInfo()
                                                 TriggerServerEvent('cd_dispatch:AddNotification', {
-                                                    job_table = {'police'}, 
+                                                    job_table = {'police', 'sheriff', 'detectives'}, 
                                                     coords = data.coords,
                                                     title = '10-90 - Bank Robbery',
                                                     message = 'A '..data.sex..' robbing a bank at '..data.street, 
