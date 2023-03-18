@@ -1,76 +1,103 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 local robberyBusy = false
 local timeOut = false
-local blackoutActive = false
-
-local ItemList = {
-    ["electronickit"] = "electronickit",
-    ["trojan_usb"] = "trojan_usb"
-}
 
 -- Functions
 
-local function CheckStationHits()
-    if Config.PowerStations[1].hit and Config.PowerStations[2].hit and Config.PowerStations[3].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 19, false)
+--- This will convert a table's keys into an array
+--- @param tbl table
+--- @return array
+local function TableKeysToArray(tbl)
+    local array = {}
+    for k in pairs(tbl) do
+        array[#array+1] = k
     end
-    if Config.PowerStations[3].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 18, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 7, false)
-    end
-    if Config.PowerStations[4].hit and Config.PowerStations[5].hit and Config.PowerStations[6].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 4, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 8, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 5, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 6, false)
-    end
-    if Config.PowerStations[1].hit and Config.PowerStations[2].hit and Config.PowerStations[3].hit and Config.PowerStations[4].hit and Config.PowerStations[5].hit and Config.PowerStations[6].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 1, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 2, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 3, false)
-    end
-    if Config.PowerStations[7].hit and Config.PowerStations[8].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 9, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 10, false)
-    end
-    if Config.PowerStations[9].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 11, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 12, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 13, false)
-    end
-    if Config.PowerStations[9].hit and Config.PowerStations[10].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 14, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 17, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 19, false)
-    end
-    if Config.PowerStations[7].hit and Config.PowerStations[9].hit and Config.PowerStations[10].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 15, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 16, false)
-    end
-    if Config.PowerStations[10].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 20, false)
-    end
-    if Config.PowerStations[11].hit and Config.PowerStations[1].hit and Config.PowerStations[2].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 21, false)
-        TriggerClientEvent("qb-bankrobbery:client:BankSecurity", 1, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 22, false)
-        TriggerClientEvent("qb-bankrobbery:client:BankSecurity", 2, false)
-    end
-    if Config.PowerStations[8].hit and Config.PowerStations[4].hit and Config.PowerStations[5].hit and Config.PowerStations[6].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 23, false)
-        TriggerClientEvent("qb-bankrobbery:client:BankSecurity", 3, false)
-    end
-    if Config.PowerStations[12].hit and Config.PowerStations[13].hit then
-        TriggerClientEvent("police:client:SetCamera", -1, 24, false)
-        TriggerClientEvent("qb-bankrobbery:client:BankSecurity", 4, false)
-        TriggerClientEvent("police:client:SetCamera", -1, 25, false)
-        TriggerClientEvent("qb-bankrobbery:client:BankSecurity", 5, false)
-    end
+    return array
 end
 
+--- This will loop over the given table to check if the power stations in the table have been hit
+--- @param toLoop table
+--- @return boolean
+local function TableLoopStations(toLoop)
+    local hits = 0
+    for _, station in pairs(toLoop) do
+        if type(station) == 'table' then
+            local hits2 = 0
+            for _, station2 in pairs(station) do
+                if Config.PowerStations[station2].hit then hits2 += 1 end
+                if hits2 == #station then return true end
+            end
+        else
+            if Config.PowerStations[station].hit then hits += 1 end
+            if hits == #toLoop then return true end
+        end
+    end
+    return false
+end
+
+--- This will check what stations have been hit and update them accordingly
+--- @return nil
+local function CheckStationHits()
+    local policeHits = {}
+    local bankHits = {}
+
+    for k, v in pairs(Config.CameraHits) do
+        local allStationsHitPolice = false
+        local allStationsHitBank = false
+        if type(v.type) == 'table' then
+            for _, cameraType in pairs(v.type) do
+                if cameraType == 'police' then
+                    if type(v.stationsToHitPolice) == 'table' then
+                        allStationsHitPolice = TableLoopStations(v.stationsToHitPolice)
+                    else
+                        allStationsHitPolice = Config.PowerStations[v.stationsToHitPolice].hit
+                    end
+                elseif cameraType == 'bank' then
+                    if type(v.stationsToHitBank) == 'table' then
+                        allStationsHitBank = TableLoopStations(v.stationsToHitBank)
+                    else
+                        allStationsHitBank = Config.PowerStations[v.stationsToHitBank].hit
+                    end
+                end
+            end
+        else
+            if v.type == 'police' then
+                if type(v.stationsToHitPolice) == 'table' then
+                    allStationsHitPolice = TableLoopStations(v.stationsToHitPolice)
+                else
+                    allStationsHitPolice = Config.PowerStations[v.stationsToHitPolice].hit
+                end
+            elseif v.type == 'bank' then
+                if type(v.stationsToHitBank) == 'table' then
+                    allStationsHitBank = TableLoopStations(v.stationsToHitBank)
+                else
+                    allStationsHitBank = Config.PowerStations[v.stationsToHitBank].hit
+                end
+            end
+        end
+
+        if allStationsHitPolice then
+            policeHits[k] = true
+        end
+
+        if allStationsHitBank then
+            bankHits[k] = true
+        end
+    end
+
+    policeHits = TableKeysToArray(policeHits)
+    bankHits = TableKeysToArray(bankHits)
+
+    -- table.type checks if it's empty as well, if it's empty it will return the type 'empty' instead of 'array'
+    if table.type(policeHits) == 'array' then Config.OnPoliceCameraHit(policeHits) end
+    if table.type(bankHits) == 'array' then TriggerClientEvent("qb-bankrobbery:client:BankSecurity", -1, bankHits, false) end
+end
+
+--- This will do a quick check to see if all stations have been hit
+--- @return boolean
 local function AllStationsHit()
     local hit = 0
-    for k, v in pairs(Config.PowerStations) do
+    for k in pairs(Config.PowerStations) do
         if Config.PowerStations[k].hit then
             hit += 1
         end
@@ -78,8 +105,12 @@ local function AllStationsHit()
     return hit >= Config.HitsNeeded
 end
 
+--- This will check if the given coords are in the area of the given distance of a powerstation
+--- @param coords vector3
+--- @param dist number
+--- @return boolean
 local function IsNearPowerStation(coords, dist)
-    for k, v in pairs(Config.PowerStations) do
+    for _, v in pairs(Config.PowerStations) do
         if #(coords - v.coords) < dist then
             return true
         end
@@ -89,64 +120,68 @@ end
 
 -- Events
 
-RegisterNetEvent('qb-bankrobbery:server:setBankState', function(bankId, state)
+RegisterNetEvent('qb-bankrobbery:server:setBankState', function(bankId)
+    if robberyBusy then return end
     if bankId == "paleto" then
-        if not robberyBusy then
-            Config.BigBanks["paleto"]["isOpened"] = state
-            TriggerClientEvent('qb-bankrobbery:client:setBankState', -1, bankId, state)
-            TriggerEvent('qb-scoreboard:server:SetActivityBusy', "paleto", true)
-            TriggerEvent('qb-bankrobbery:server:setTimeout')
+        if Config.BigBanks["paleto"]["isOpened"] or #(GetEntityCoords(GetPlayerPed(source)) - Config.BigBanks["paleto"]["coords"]) > 2.5 then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:setBankState", extraInfo = " (paleto) ", source = source}))
         end
+        Config.BigBanks["paleto"]["isOpened"] = true
+        TriggerEvent('qb-bankrobbery:server:setTimeout')
     elseif bankId == "pacific" then
-        if not robberyBusy then
-            Config.BigBanks["pacific"]["isOpened"] = state
-            TriggerClientEvent('qb-bankrobbery:client:setBankState', -1, bankId, state)
-            TriggerEvent('qb-scoreboard:server:SetActivityBusy', "pacific", true)
-            TriggerEvent('qb-bankrobbery:server:setTimeout')
+        if Config.BigBanks["pacific"]["isOpened"] or #(GetEntityCoords(GetPlayerPed(source)) - Config.BigBanks["pacific"]["coords"][2]) > 2.5 then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:setBankState", extraInfo = " (pacific) ", source = source}))
         end
+        Config.BigBanks["pacific"]["isOpened"] = true
+        TriggerEvent('qb-bankrobbery:server:setTimeout')
     else
-        if not robberyBusy then
-            Config.SmallBanks[bankId]["isOpened"] = state
-            TriggerClientEvent('qb-bankrobbery:client:setBankState', -1, bankId, state)
-            TriggerEvent('qb-banking:server:SetBankClosed', bankId, true)
-            TriggerEvent('qb-scoreboard:server:SetActivityBusy', "bankrobbery", true)
-            TriggerEvent('qb-bankrobbery:server:SetSmallbankTimeout', bankId)
+        if Config.SmallBanks[bankId]["isOpened"] or #(GetEntityCoords(GetPlayerPed(source)) - Config.SmallBanks[bankId]["coords"]) > 2.5 then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:setBankState", extraInfo = " (smallbank "..bankId..") ", source = source}))
         end
+        Config.SmallBanks[bankId]["isOpened"] = true
+        TriggerEvent('qb-bankrobbery:server:SetSmallBankTimeout', bankId)
     end
+    TriggerClientEvent('qb-bankrobbery:client:setBankState', -1, bankId)
     robberyBusy = true
+    Config.OnRobberyStart(bankId)
 end)
 
 RegisterNetEvent('qb-bankrobbery:server:setLockerState', function(bankId, lockerId, state, bool)
-    if bankId == "paleto" then
-        Config.BigBanks["paleto"]["lockers"][lockerId][state] = bool
-    elseif bankId == "pacific" then
-        Config.BigBanks["pacific"]["lockers"][lockerId][state] = bool
+    if bankId == "paleto" or bankId == "pacific" then
+        if #(GetEntityCoords(GetPlayerPed(source)) - Config.BigBanks[bankId]["lockers"][lockerId]["coords"]) > 2.5 then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:setLockerState", extraInfo = " ("..bankId..") ", source = source}))
+        end
+        Config.BigBanks[bankId]["lockers"][lockerId][state] = bool
     else
+        if #(GetEntityCoords(GetPlayerPed(source)) - Config.SmallBanks[bankId]["lockers"][lockerId]["coords"]) > 2.5 then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:setLockerState", extraInfo = " (smallbank "..bankId..") ", source = source}))
+        end
         Config.SmallBanks[bankId]["lockers"][lockerId][state] = bool
     end
-
     TriggerClientEvent('qb-bankrobbery:client:setLockerState', -1, bankId, lockerId, state, bool)
 end)
 
-RegisterNetEvent('qb-bankrobbery:server:recieveItem', function(type)
+RegisterNetEvent('qb-bankrobbery:server:recieveItem', function(type, bankId, lockerId)
     local src = source
     local ply = QBCore.Functions.GetPlayer(src)
-
+    if not ply then return end
     if type == "small" then
+        if #(GetEntityCoords(GetPlayerPed(src)) - Config.SmallBanks[bankId]["lockers"][lockerId]["coords"]) > 2.5 then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:receiveItem", extraInfo = " (smallbank "..bankId..") ", source = source}))
+        end
         local itemType = math.random(#Config.RewardTypes)
         local WeaponChance = math.random(1, 50)
         local odd1 = math.random(1, 50)
         local tierChance = math.random(1, 100)
-        local tier = 1
-
+        local tier
         if tierChance < 50 then tier = 1 elseif tierChance >= 50 and tierChance < 80 then tier = 2 elseif tierChance >= 80 and tierChance < 95 then tier = 3 else tier = 4 end
         if WeaponChance ~= odd1 then
             if tier ~= 4 then
                  if Config.RewardTypes[itemType].type == "item" then
-                     local item = Config.LockerRewards["tier"..tier][math.random(#Config.LockerRewards["tier"..tier])]
-                     local itemAmount = math.random(item.minAmount, item.maxAmount)
-                     ply.Functions.AddItem(item.item, itemAmount)
-                     TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item.item], "add")
+                    local item = Config.LockerRewards["tier"..tier][math.random(#Config.LockerRewards["tier"..tier])]
+                    local itemAmount = math.random(item.minAmount, item.maxAmount)
+                    ply.Functions.AddItem(item.item, itemAmount)
+                    TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item.item], "add")
                  elseif Config.RewardTypes[itemType].type == "money" then
                     local info = {
                         worth = math.random(2300, 3200)
@@ -163,24 +198,26 @@ RegisterNetEvent('qb-bankrobbery:server:recieveItem', function(type)
             TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items['weapon_stungun'], "add")
         end
     elseif type == "paleto" then
+        if #(GetEntityCoords(GetPlayerPed(source)) - Config.BigBanks["paleto"]["lockers"][lockerId]["coords"]) > 2.5 then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:receiveItem", extraInfo = " (paleto) ", source = source}))
+        end
         local itemType = math.random(#Config.RewardTypes)
         local tierChance = math.random(1, 100)
         local WeaponChance = math.random(1, 10)
         local odd1 = math.random(1, 10)
-        local tier = 1
+        local tier
         if tierChance < 25 then tier = 1 elseif tierChance >= 25 and tierChance < 70 then tier = 2 elseif tierChance >= 70 and tierChance < 95 then tier = 3 else tier = 4 end
         if WeaponChance ~= odd1 then
             if tier ~= 4 then
                  if Config.RewardTypes[itemType].type == "item" then
-                     local item = Config.LockerRewardsPaleto["tier"..tier][math.random(#Config.LockerRewardsPaleto["tier"..tier])]
-                     local itemAmount = math.random(item.minAmount, item.maxAmount)
-
-                     ply.Functions.AddItem(item.item, itemAmount)
-                     TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item.item], "add")
+                    local item = Config.LockerRewardsPaleto["tier"..tier][math.random(#Config.LockerRewardsPaleto["tier"..tier])]
+                    local itemAmount = math.random(item.minAmount, item.maxAmount)
+                    ply.Functions.AddItem(item.item, itemAmount)
+                    TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item.item], "add")
                  elseif Config.RewardTypes[itemType].type == "money" then
-                     local info = {
-                         worth = math.random(4000, 6000)
-                     }
+                    local info = {
+                        worth = math.random(4000, 6000)
+                    }
                     ply.Functions.AddItem('markedbills', math.random(1,4), false, info)
                     TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items['markedbills'], "add")
                  end
@@ -193,42 +230,43 @@ RegisterNetEvent('qb-bankrobbery:server:recieveItem', function(type)
             TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items['weapon_vintagepistol'], "add")
         end
     elseif type == "pacific" then
+        if #(GetEntityCoords(GetPlayerPed(source)) - Config.BigBanks["pacific"]["lockers"][lockerId]["coords"]) > 2.5 then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:receiveItem", extraInfo = " (pacific) ", source = source}))
+        end
         local itemType = math.random(#Config.RewardTypes)
         local WeaponChance = math.random(1, 100)
         local odd1 = math.random(1, 100)
         local odd2 = math.random(1, 100)
         local tierChance = math.random(1, 100)
-        local tier = 1
+        local tier
         if tierChance < 10 then tier = 1 elseif tierChance >= 25 and tierChance < 50 then tier = 2 elseif tierChance >= 50 and tierChance < 95 then tier = 3 else tier = 4 end
         if WeaponChance ~= odd1 or WeaponChance ~= odd2 then
             if tier ~= 4 then
                 if Config.RewardTypes[itemType].type == "item" then
                     local item = Config.LockerRewardsPacific["tier"..tier][math.random(#Config.LockerRewardsPacific["tier"..tier])]
-                    local itemAmount = math.random(item.minAmount, item.maxAmount)
+                    local maxAmount
                     if tier == 3 then maxAmount = 7 elseif tier == 2 then maxAmount = 18 else maxAmount = 25 end
                     local itemAmount = math.random(maxAmount)
-
                     ply.Functions.AddItem(item.item, itemAmount)
                     TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items[item.item], "add")
                 elseif Config.RewardTypes[itemType].type == "money" then
-                     local moneyAmount = math.random(1200, 7000)
-                     local info = {
-                         worth = math.random(19000, 21000)
-                     }
+                    local info = {
+                        worth = math.random(19000, 21000)
+                    }
                     ply.Functions.AddItem('markedbills', math.random(1,4), false, info)
                     TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items['markedbills'], "add")
                 end
             else
-                 local info = {
-                     worth = math.random(19000, 21000)
-                 }
+                local info = {
+                    worth = math.random(19000, 21000)
+                }
                 ply.Functions.AddItem('markedbills', math.random(1,4), false, info)
                 TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items['markedbills'], "add")
-                 local info = {
-                     crypto = math.random(1, 3)
-                 }
-                 ply.Functions.AddItem("cryptostick", 1, false, info)
-                 TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items['cryptostick'], "add")
+                info = {
+                    crypto = math.random(1, 3)
+                }
+                ply.Functions.AddItem("cryptostick", 1, false, info)
+                TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items['cryptostick'], "add")
             end
         else
             local chance = math.random(1, 2)
@@ -240,99 +278,103 @@ RegisterNetEvent('qb-bankrobbery:server:recieveItem', function(type)
                 ply.Functions.AddItem('weapon_minismg', 1)
                 TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items['weapon_minismg'], "add")
             end
-
         end
     end
 end)
 
-RegisterNetEvent('qb-bankrobbery:server:setTimeout', function()
-    if not robberyBusy then
-        if not timeOut then
-            timeOut = true
-            CreateThread(function()
-                Wait(90 * (60 * 1000))
-                timeOut = false
-                robberyBusy = false
-                TriggerEvent('qb-scoreboard:server:SetActivityBusy', "bankrobbery", false)
-                TriggerEvent('qb-scoreboard:server:SetActivityBusy', "pacific", false)
-
-                for k, v in pairs(Config.BigBanks["pacific"]["lockers"]) do
-                    Config.BigBanks["pacific"]["lockers"][k]["isBusy"] = false
-                    Config.BigBanks["pacific"]["lockers"][k]["isOpened"] = false
-                end
-
-                for k, v in pairs(Config.BigBanks["paleto"]["lockers"]) do
-                    Config.BigBanks["paleto"]["lockers"][k]["isBusy"] = false
-                    Config.BigBanks["paleto"]["lockers"][k]["isOpened"] = false
-                end
-
-                TriggerClientEvent('qb-bankrobbery:client:ClearTimeoutDoors', -1)
-                Config.BigBanks["paleto"]["isOpened"] = false
-                Config.BigBanks["pacific"]["isOpened"] = false
-            end)
-        end
-    end
+AddEventHandler('qb-bankrobbery:server:setTimeout', function()
+    if robberyBusy or timeOut then return end
+    timeOut = true
+    CreateThread(function()
+        SetTimeout(60000 * 90, function()
+            for k in pairs(Config.BigBanks["pacific"]["lockers"]) do
+                Config.BigBanks["pacific"]["lockers"][k]["isBusy"] = false
+                Config.BigBanks["pacific"]["lockers"][k]["isOpened"] = false
+            end
+            for k in pairs(Config.BigBanks["paleto"]["lockers"]) do
+                Config.BigBanks["paleto"]["lockers"][k]["isBusy"] = false
+                Config.BigBanks["paleto"]["lockers"][k]["isOpened"] = false
+            end
+            TriggerClientEvent('qb-bankrobbery:client:ClearTimeoutDoors', -1)
+            Config.BigBanks["paleto"]["isOpened"] = false
+            Config.BigBanks["pacific"]["isOpened"] = false
+            timeOut = false
+            robberyBusy = false
+            Config.OnRobberyTimeoutEnd("paleto")
+            Config.OnRobberyTimeoutEnd("pacific")
+        end)
+    end)
 end)
 
-RegisterNetEvent('qb-bankrobbery:server:SetSmallbankTimeout', function(BankId)
-    if not robberyBusy then
-        if not timeOut then
-            timeOut = true
-            CreateThread(function()
-                Wait(30 * (60 * 1000))
-                timeOut = false
-                robberyBusy = false
-
-                for k, v in pairs(Config.SmallBanks[BankId]["lockers"]) do
-                    Config.SmallBanks[BankId]["lockers"][k]["isOpened"] = false
-                    Config.SmallBanks[BankId]["lockers"][k]["isBusy"] = false
-                end
-
-                timeOut = false
-                robberyBusy = false
-            	TriggerClientEvent('qb-bankrobbery:client:ResetFleecaLockers', -1, BankId)
-            	TriggerEvent('qb-banking:server:SetBankClosed', BankId, false)
-            end)
-		end
-    end
+AddEventHandler('qb-bankrobbery:server:SetSmallBankTimeout', function(bankId)
+    if robberyBusy or timeOut then return end
+    timeOut = true
+    CreateThread(function()
+        SetTimeout(60000 * 30, function()
+            for k in pairs(Config.SmallBanks[bankId]["lockers"]) do
+                Config.SmallBanks[bankId]["lockers"][k]["isOpened"] = false
+                Config.SmallBanks[bankId]["lockers"][k]["isBusy"] = false
+            end
+            TriggerClientEvent('qb-bankrobbery:client:ResetFleecaLockers', -1, bankId)
+            timeOut = false
+            robberyBusy = false
+            Config.OnRobberyTimeoutEnd(bankId)
+        end)
+    end)
 end)
 
-RegisterNetEvent('qb-bankrobbery:server:callCops', function(type, bank, streetLabel, coords)
-    local cameraId = 4
-    local bankLabel = "Fleeca"
-    local msg = ""
+RegisterNetEvent('qb-bankrobbery:server:callCops', function(type, bank, coords)
     if type == "small" then
-        cameraId = Config.SmallBanks[bank]["camId"]
-        bankLabel = "Fleeca"
-        msg = "The Alarm has been activated at "..bankLabel.. " " ..streetLabel.." (CAMERA ID: "..cameraId..")"
+        if not Config.SmallBanks[bank]["alarm"] then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:callCops", extraInfo = " (smallbank "..bank..") ", source = source}))
+        end
     elseif type == "paleto" then
-        cameraId = Config.BigBanks["paleto"]["camId"]
-        bankLabel = "Blaine County Savings"
-        msg = "The Alarm has been activated at "..bankLabel.. " Paleto Bay (CAMERA ID: "..cameraId..")"
+        if not Config.BigBanks["paleto"]["alarm"] then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:callCops", extraInfo = " (paleto) ", source = source}))
+        end
     elseif type == "pacific" then
-        bankLabel = "Pacific Standard Bank"
-        msg = "The Alarm has been activated at "..bankLabel.. " Alta St (CAMERA ID: 1/2/3)"
+        if not Config.BigBanks["pacific"]["alarm"] then
+            return error(Lang:t("error.event_trigger_wrong", {event = "qb-bankrobbery:server:callCops", extraInfo = " (pacific) ", source = source}))
+        end
     end
-    local alertData = {
-        title = "Bank robbery",
-        coords = {x = coords.x, y = coords.y, z = coords.z},
-        description = msg,
-    }
-    TriggerClientEvent("qb-bankrobbery:client:robberyCall", -1, type, bank, streetLabel, coords)
-    TriggerClientEvent("qb-phone:client:addPoliceAlert", -1, alertData)
+    TriggerClientEvent("qb-bankrobbery:client:robberyCall", -1, type, coords)
 end)
 
 RegisterNetEvent('qb-bankrobbery:server:SetStationStatus', function(key, isHit)
     Config.PowerStations[key].hit = isHit
     TriggerClientEvent("qb-bankrobbery:client:SetStationStatus", -1, key, isHit)
     if AllStationsHit() then
-        TriggerEvent("qb-weathersync:server:toggleBlackout")
-        TriggerClientEvent("police:client:DisableAllCameras", -1)
+        exports["qb-weathersync"]:setBlackout(true)
         TriggerClientEvent("qb-bankrobbery:client:disableAllBankSecurity", -1)
-        blackoutActive = true
+        Config.OnBlackout(true)
+        CreateThread(function()
+            SetTimeout(60000 * Config.BlackoutTimer, function()
+                exports["qb-weathersync"]:setBlackout(false)
+                TriggerClientEvent("qb-bankrobbery:client:enableAllBankSecurity", -1)
+                Config.OnBlackout(false)
+            end)
+        end)
     else
         CheckStationHits()
     end
+end)
+
+RegisterNetEvent('qb-bankrobbery:server:removeElectronicKit', function()
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    Player.Functions.RemoveItem('electronickit', 1)
+    TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items["electronickit"], "remove")
+    Player.Functions.RemoveItem('trojan_usb', 1)
+    TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items["trojan_usb"], "remove")
+end)
+
+RegisterNetEvent('qb-bankrobbery:server:removeBankCard', function(number)
+    local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+    if not Player then return end
+    Player.Functions.RemoveItem('security_card_'..number, 1)
+    TriggerClientEvent('inventory:client:ItemBox', src, QBCore.Shared.Items['security_card_'..number], "remove")
 end)
 
 RegisterNetEvent('thermite:StartServerFire', function(coords, maxChildren, isGasFire)
@@ -353,16 +395,17 @@ end)
 
 -- Callbacks
 
-QBCore.Functions.CreateCallback('qb-bankrobbery:server:isRobberyActive', function(source, cb)
+QBCore.Functions.CreateCallback('qb-bankrobbery:server:isRobberyActive', function(_, cb)
     cb(robberyBusy)
 end)
 
-QBCore.Functions.CreateCallback('qb-bankrobbery:server:GetConfig', function(source, cb)
-    cb(Config)
+QBCore.Functions.CreateCallback('qb-bankrobbery:server:GetConfig', function(_, cb)
+    cb(Config.PowerStations, Config.BigBanks, Config.SmallBanks)
 end)
 
 QBCore.Functions.CreateCallback("thermite:server:check", function(source, cb)
     local Player = QBCore.Functions.GetPlayer(source)
+    if not Player then return cb(false) end
     if Player.Functions.RemoveItem("thermite", 1) then
         TriggerClientEvent('inventory:client:ItemBox', source, QBCore.Shared.Items["thermite"], "remove")
         cb(true)
@@ -373,54 +416,30 @@ end)
 
 -- Items
 
-QBCore.Functions.CreateUseableItem("thermite", function(source, item)
+QBCore.Functions.CreateUseableItem("thermite", function(source)
     local Player = QBCore.Functions.GetPlayer(source)
-	if Player.Functions.GetItemByName('lighter') ~= nil then
+    if not Player or not Player.Functions.GetItemByName('thermite') then return end
+	if Player.Functions.GetItemByName('lighter') then
         TriggerClientEvent("thermite:UseThermite", source)
     else
-        TriggerClientEvent('QBCore:Notify', source, "You're missing ignition source ", "error")
+        TriggerClientEvent('QBCore:Notify', source, Lang:t("error.missing_ignition_source"), "error")
     end
 end)
 
-QBCore.Functions.CreateUseableItem("security_card_01", function(source, item)
+QBCore.Functions.CreateUseableItem("security_card_01", function(source)
     local Player = QBCore.Functions.GetPlayer(source)
-	if Player.Functions.GetItemByName('security_card_01') ~= nil then
-        TriggerClientEvent("qb-bankrobbery:UseBankcardA", source)
-    end
+	if not Player or not Player.Functions.GetItemByName('security_card_01') then return end
+    TriggerClientEvent("qb-bankrobbery:UseBankcardA", source)
 end)
 
-QBCore.Functions.CreateUseableItem("security_card_02", function(source, item)
+QBCore.Functions.CreateUseableItem("security_card_02", function(source)
     local Player = QBCore.Functions.GetPlayer(source)
-	if Player.Functions.GetItemByName('security_card_02') ~= nil then
-        TriggerClientEvent("qb-bankrobbery:UseBankcardB", source)
-    end
+	if not Player or not Player.Functions.GetItemByName('security_card_02') then return end
+    TriggerClientEvent("qb-bankrobbery:UseBankcardB", source)
 end)
 
-QBCore.Functions.CreateUseableItem("electronickit", function(source, item)
+QBCore.Functions.CreateUseableItem("electronickit", function(source)
     local Player = QBCore.Functions.GetPlayer(source)
-    if Player.Functions.GetItemByName('electronickit') ~= nil then
-        TriggerClientEvent("electronickit:UseElectronickit", source)
-    end
-end)
-
--- Threads
-
-CreateThread(function()
-    while true do
-        Wait(1000 * 60 * 30)
-        if blackoutActive then
-            TriggerEvent("qb-weathersync:server:toggleBlackout")
-            TriggerClientEvent("police:client:EnableAllCameras", -1)
-            TriggerClientEvent("qb-bankrobbery:client:enableAllBankSecurity", -1)
-            blackoutActive = false
-        end
-    end
-end)
-
-CreateThread(function()
-    while true do
-        Wait(1000 * 60 * 30)
-        TriggerClientEvent("qb-bankrobbery:client:enableAllBankSecurity", -1)
-        TriggerClientEvent("police:client:EnableAllCameras", -1)
-    end
+    if not Player or not Player.Functions.GetItemByName('electronickit') then return end
+    TriggerClientEvent("electronickit:UseElectronickit", source)
 end)

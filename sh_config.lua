@@ -1,59 +1,21 @@
 Config = Config or {}
 
-Config.ItemTiers = 1
-
-Config.MinimumPaletoPolice = 3
-Config.MinimumPacificPolice = 4
-Config.MinimumFleecaPolice = 2
-Config.MinimumThermitePolice = 1
-
-Config.HitsNeeded = 3 -- The amount of powerstation needed to be hit to cause a blackout
-
-Config.RewardTypes = {
-    [1] = {
-        type = "item"
-    },
-    [2] = {
-        type = "money",
-        maxAmount = 1500
-    }
-}
-
-Config.LockerRewards = {
-    ["tier1"] = {
-        [1] = {item = "goldchain", minAmount = 1, maxAmount = 3},
-    },
-    ["tier2"] = {
-        [1] = {item = "rolex", minAmount = 1, maxAmount = 2},
-    },
-    ["tier3"] = {
-        [1] = {item = "goldbar", minAmount = 1, maxAmount = 2},
-    },
-}
-
-Config.LockerRewardsPaleto = {
-    ["tier1"] = {
-        [1] = {item = "goldchain", minAmount = 1, maxAmount = 2},
-    },
-    ["tier2"] = {
-        [1] = {item = "rolex", minAmount = 1, maxAmount = 2},
-    },
-    ["tier3"] = {
-        [1] = {item = "goldbar", minAmount = 2, maxAmount = 4},
-    },
-}
-
-Config.LockerRewardsPacific = {
-    ["tier1"] = {
-        [1] = {item = "goldbar", minAmount = 1, maxAmount = 5},
-    },
-    ["tier2"] = {
-        [1] = {item = "goldbar", minAmount = 4, maxAmount = 6},
-    },
-    ["tier3"] = {
-        [1] = {item = "goldbar", minAmount = 4, maxAmount = 8},
-    },
-}
+--- This is called whenever an item check occurs
+---
+--- Accepted formats for `items`:
+--- ```lua
+--- 'itemName'
+---
+--- {'item1', 'item2', 'etc'}
+---
+--- {['item1'] = amount, ['item2'] = 2, ['etc' = 5]} -- the amount here is the amount needed of that item, if the amount variable is defined when this format is used, the amount variable will be prioritized
+--- ```
+--- @param items table | array | string
+--- @param amount number | nil
+--- @return boolean
+function Config.HasItem(items, amount)
+    return QBCore.Functions.HasItem(items, amount)
+end
 
 Config.PowerStations = {
     [1] = {
@@ -232,7 +194,7 @@ Config.SmallBanks = {
         ["isOpened"] = false,
         ["lockers"] = {
             [1] = {
-                ["coords"] = vector3(350.99, -54.13, 49.01),
+                ["coords"] = vector3(-350.99, -54.13, 49.01),
                 ["isBusy"] = false,
                 ["isOpened"] = false
             },
@@ -434,7 +396,7 @@ Config.SmallBanks = {
                 ["isOpened"] = false
             }
         }
-    }	
+    }
 }
 
 Config.BigBanks = {
@@ -583,12 +545,4 @@ Config.BigBanks = {
             }
         }
     }
-}
-
-Config.MaleNoHandshoes = {
-    [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true, [9] = true, [10] = true, [11] = true, [12] = true, [13] = true, [14] = true, [15] = true, [18] = true, [26] = true, [52] = true, [53] = true, [54] = true, [55] = true, [56] = true, [57] = true, [58] = true, [59] = true, [60] = true, [61] = true, [62] = true, [112] = true, [113] = true, [114] = true, [118] = true, [125] = true, [132] = true
-}
-
-Config.FemaleNoHandshoes = {
-    [0] = true, [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true, [9] = true, [10] = true, [11] = true, [12] = true, [13] = true, [14] = true, [15] = true, [19] = true, [59] = true, [60] = true, [61] = true, [62] = true, [63] = true, [64] = true, [65] = true, [66] = true, [67] = true, [68] = true, [69] = true, [70] = true, [71] = true, [129] = true, [130] = true, [131] = true, [135] = true, [142] = true, [149] = true, [153] = true, [157] = true, [161] = true, [165] = true
 }
